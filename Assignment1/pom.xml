@@ -2,17 +2,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
+	<!--
+		POM (Project Object Model) tells Maven how to compile, test and package this
+		application. The Spring Boot parent supplies compatible library versions and defaults.
+	-->
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>4.1.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
+
+	<!-- info about this project and determine the generated JAR filename -->
+	<!--What is this project called?Which Java version does it use? Which libraries/dependencies does it need?
+  How should the project be built?  How should the runnable JAR be created?-->
 	<groupId>cloud.concurrent</groupId>
-	<artifactId>Assignment1</artifactId>
+	<artifactId>assignment1</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Assignment1</name>
-	<description/>
+	<name>COMP3011 Assignment 1</name>
+	<description>Concurrent speech-to-text web application</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -26,19 +35,24 @@
 		<tag/>
 		<url/>
 	</scm>
+
+	<!-- Compile for Java 21 so the JAR can run on the assignment's Java 21+ environment -->
 	<properties>
 		<java.version>21</java.version>
 	</properties>
 	<dependencies>
+		<!-- Runtime dependency: provides Spring's RestClient for calling the OpenAI API -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-restclient</artifactId>
 		</dependency>
+		<!-- Runtime dependency: provides REST controllers and the embedded web server -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
+		<!-- Test dependencies are available while testing but are not application features -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-restclient-test</artifactId>
@@ -53,6 +67,7 @@
 
 	<build>
 		<plugins>
+			<!-- Packages the program and dependencies into one executable Spring Boot JAR. -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

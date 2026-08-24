@@ -1,12 +1,42 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Speech to text</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
 </head>
 <body>
-  hello world
-  
+    <main class="app-shell">
+        <section class="recorder-card">
+            <h1>Turn your voice into text</h1>
+
+            <div class="status-panel">
+                <span class="status-indicator"></span>
+                <span id="status-text">Ready to record</span>
+                <span id="recording-time" class="recording-time" hidden>0:00</span>
+            </div>
+
+            <div class="controls">
+                <button id="start-button" class="button button-primary" type="button">
+                    Start audio recording
+                </button>
+                <button id="stop-button" class="button button-secondary" type="button" disabled>
+                    Stop recording
+                </button>
+            </div>
+
+            <p id="error-message" class="error-message" hidden></p>
+
+            <section class="result-panel">
+                <h2>Transcription</h2>
+                <span id="result-state">Waiting for a recording</span>
+                <p id="transcription" class="transcription">
+                    Your transcribed words will appear here.
+                </p>
+            </section>
+        </section>
+    </main>
 </body>
 </html>

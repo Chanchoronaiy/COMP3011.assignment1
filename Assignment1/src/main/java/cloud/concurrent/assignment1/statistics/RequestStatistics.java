@@ -1,73 +1,80 @@
 package cloud.concurrent.assignment1.statistics;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAccumulator;
+import java.util.concurrent.atomic.LongAdder;
 import org.springframework.stereotype.Component;
 
 /**
- * Collects process-wide request and token measurements.
+ * Collects request measurements without putting one large lock around the application.
  *
- * <p>This is the simplest thread-safe version. The {@code synchronized} keyword lets only one
- * thread at a time execute a synchronized method on this object. That mutual exclusion prevents
- * two request threads from reading and overwriting the same counter at the same moment.</p>
+ * <p>LongAdder spreads frequent counter updates across internal cells. That makes it a better fit
+ * than one synchronized integer when more than 200 request threads may update the same counter.</p>
  */
-// @Component tells Spring to create and share one RequestStatistics object across the application.
 @Component
 public class RequestStatistics {
 
-    // These fields are shared mutable state: many request threads can update the same values.
-    private long totalRequests;
-    private long successfulRequests;
-    private long failedRequests;
-    private long totalAudioBytes;
-    private long totalInputTokens;
-    private long totalOutputTokens;
-    private long totalProcessingNanoseconds;
-    private int activeRequests;
-    private int highestConcurrentRequests;
+    // These fields are shared by all request threads. LongAdder allows concurrent updates
+    // without a single synchronized method becoming a bottleneck.
+    private final LongAdder totalRequests = new LongAdder();
+    private final LongAdder successfulRequests = new LongAdder();
+    private final LongAdder failedRequests = new LongAdder();
+    private final LongAdder totalAudioBytes = new LongAdder();
+    private final LongAdder totalInputTokens = new LongAdder();
+    private final LongAdder totalOutputTokens = new LongAdder();
+    private final LongAdder totalProcessingNanoseconds = new LongAdder();
+    // AtomicInteger is used because the exact updated active count is needed immediately.
+    private final AtomicInteger activeRequests = new AtomicInteger();
+    // LongAccumulator applies Long::max atomically, preserving the largest observed count.
+    private final LongAccumulator highestConcurrentRequests =
+            new LongAccumulator(Long::max, 0);
 
-    // synchronized locks this RequestStatistics object for the entire method call.
-    public synchronized void recordStarted(long audioBytes) {
-        // ++ is shorthand for adding one to the current counter value.
-        totalRequests++;
-        totalAudioBytes += audioBytes;
-        activeRequests++;
-        highestConcurrentRequests = Math.max(highestConcurrentRequests, activeRequests);
+    /* Records a request after its input has passed validation. */
+    public void recordStarted(long audioBytes) {
+        totalRequests.increment();
+        totalAudioBytes.add(audioBytes);
+
+        int active = activeRequests.incrementAndGet();
+        highestConcurrentRequests.accumulate(active);
     }
 
-    // The same object lock protects all related success updates as one critical section.
-    public synchronized void recordSucceeded(
+    /** Records the provider result and releases this request from the active count. */
+    public void recordSucceeded(
             long inputTokens,
             long outputTokens,
             long processingNanoseconds) {
-        successfulRequests++;
-        totalInputTokens += inputTokens;
-        totalOutputTokens += outputTokens;
-        totalProcessingNanoseconds += processingNanoseconds;
-        activeRequests--;
+        successfulRequests.increment();
+        totalInputTokens.add(inputTokens);
+        totalOutputTokens.add(outputTokens);
+        totalProcessingNanoseconds.add(processingNanoseconds);
+        activeRequests.decrementAndGet();
     }
 
-    // A failed request must also reduce activeRequests so the shared count stays balanced.
-    public synchronized void recordFailed(long processingNanoseconds) {
-        failedRequests++;
-        totalProcessingNanoseconds += processingNanoseconds;
-        activeRequests--;
+    /** Records a failed provider call and releases this request from the active count. */
+    public void recordFailed(long processingNanoseconds) {
+        failedRequests.increment();
+        totalProcessingNanoseconds.add(processingNanoseconds);
+        activeRequests.decrementAndGet();
     }
 
-    // Reading is synchronized too; otherwise another thread could change fields mid-snapshot.
-    public synchronized StatisticsSnapshot snapshot() {
-        long completedRequests = successfulRequests + failedRequests;
+    /** Returns an immutable point-in-time view suitable for a JSON response. */
+    public StatisticsSnapshot snapshot() {
+        // sum() reads each LongAdder's current value. With concurrent requests, this is a
+        // point-in-time monitoring view rather than one transactionally locked snapshot.
+        long completedRequests = successfulRequests.sum() + failedRequests.sum();
         double averageProcessingMilliseconds = completedRequests == 0
                 ? 0
-                : totalProcessingNanoseconds / 1_000_000.0 / completedRequests;
+                : totalProcessingNanoseconds.sum() / 1_000_000.0 / completedRequests;
 
         return new StatisticsSnapshot(
-                totalRequests,
-                successfulRequests,
-                failedRequests,
-                activeRequests,
-                highestConcurrentRequests,
-                totalAudioBytes,
-                totalInputTokens,
-                totalOutputTokens,
+                totalRequests.sum(),
+                successfulRequests.sum(),
+                failedRequests.sum(),
+                activeRequests.get(),
+                highestConcurrentRequests.get(),
+                totalAudioBytes.sum(),
+                totalInputTokens.sum(),
+                totalOutputTokens.sum(),
                 averageProcessingMilliseconds);
     }
 }

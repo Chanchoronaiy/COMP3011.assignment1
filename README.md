@@ -50,7 +50,7 @@ The `read -s` prompt hides the key and keeps it out of the command itself. Open
 <http://localhost:8080> and allow microphone access when prompted. DO NOT commit a real key to the
 repository or paste it into a browser file.
 
-## Runing th eporject LOCALLY without API key
+## Runing the porject LOCALLY without API key
 
 The `local-stub` Spring profile shows complete browser upload and REST flow without
 contacting OpenAI:
@@ -73,7 +73,7 @@ java -jar target/assignment1-0.0.1-SNAPSHOT.jar
 The Spring Boot Maven plugin creates one executable fat JAR containing the application and its
 runtime dependencies. This is the JAR intended for the TITAN upload.
 
-## REST API contract
+## REST API endpoints
 
 | Method | Path | Purpose | Successful result |
 | --- | --- | --- | --- |
@@ -93,27 +93,26 @@ All controller errors use the shared `timestamp`, `status`, `error`, `message`, 
 - Microphone tracks released immediately after recording to protect privacy and device resources
 
 
-## Regression-testing approach
+## ☹︎  Regression-testing approach
 
-The suite runs without a real API key. Every test has a specific failure it is designed to prevent:
+| Test class | Why it exists and expected result | 
+| --- | --- |
+| `Assignment1ApplicationTests` | Spring must create the full default application context | 
+| `LocalStubProfileTests` | Activating `local-stub` must select the local implementation | 
+| `TranscriptionControllerTests` | Valid audio returns stub text; empty or unsupported audio returns `400` | 
+| `OpenAiTranscriptionServiceTests` | A mock provider must receive the model, bearer header, and multipart audio and return mapped text/tokens | 
+| `AdministrationControllerTests` | Uptime has exactly three fields; first shutdown is `202`; second is `409` | 
+| `StatisticsControllerTests` | Statistics returns exactly the two token fields |
+| `RequestStatisticsConcurrencyTests` | 240 virtual threads finish together and every total remains exact | 
+| `ConcurrentHttpRequestTests` | 220 blocking requests must all enter the controller simultaneously and return `200` |
 
-| Test class | Why it exists and expected result | Assurance provided |
-| --- | --- | --- |
-| `Assignment1ApplicationTests` | Spring must create the full default application context | Configuration and dependency wiring are complete |
-| `LocalStubProfileTests` | Activating `local-stub` must select the local implementation | Profiles replace environment-specific dependencies correctly |
-| `TranscriptionControllerTests` | Valid audio returns stub text; empty or unsupported audio returns `400` | REST validation, statistics, safe errors, correlation header, and completion logging remain correct |
-| `OpenAiTranscriptionServiceTests` | A mock provider must receive the model, bearer header, and multipart audio and return mapped text/tokens | The real OpenAI HTTP boundary is correctly formed without spending API credit |
-| `AdministrationControllerTests` | Uptime has exactly three fields; first shutdown is `202`; second is `409` | Administration routes match the supplied YAML contract |
-| `StatisticsControllerTests` | Statistics returns exactly the two token fields | Internal measurements cannot leak into the prescribed response |
-| `RequestStatisticsConcurrencyTests` | 240 virtual threads finish together and every total remains exact | A regression in thread-safe counters exposes a race condition |
-| `ConcurrentHttpRequestTests` | 220 blocking requests must all enter the controller simultaneously and return `200` | One Java process handles more than 200 overlapping blocking HTTP operations |
+---
 
-The two concurrency tests are intentionally different: one attacks shared mutable state, while the
-other exercises the real embedded HTTP server and controller path.
+# Enjoy~~ 
+# Developer Touch Chanchoronaiy
+# ASSISTANT AND REFERENCES
 
-
-## Development assistance and references
-
+The theory references the COMPP 3011 course materials, cross-checked with the assignment API YAML, and Java naming-convention document (codeconventions-150003.pdf).
 OpenAI Codex was used as assistance for Java/Spring research, design review, implementation suggestions,
-and helping in test generation. The theory references the course materials, corss-checked with the assignment API YAML, Java naming-convention document.
+and helping in test generation. 
 

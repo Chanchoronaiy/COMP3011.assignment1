@@ -4,7 +4,7 @@ This Spring Boot application records up to one minute of microphone audio in the
 the recording to a Java REST endpoint, and uses OpenAI's speech-to-text API to produce a
 transcription.
 
-## Architecture and course concepts
+## ⚙️ Architecture and course concepts
 
 ```text
 Browser microphone
@@ -22,27 +22,22 @@ Thread-safe global statistics
 ```
 
 The `TranscriptionService` interface separates the REST controller from the cloud provider.
-Spring constructor injection selects the real service normally, a local stub under the
-`local-stub` profile, and deterministic test doubles in regression tests. This keeps tests free
-from paid network calls and makes configuration differences explicit rather than commenting code
-in and out.
+Spring constructor injection selects the real service normally, and a local stub under the
+`local-stub` profile, and deterministic test doubles in regression tests, keeping away from paid network calls.
 
 The server enables Java virtual threads because each transcription request spends most of its time
 waiting for blocking cloud I/O. The shared counters use `LongAdder` and atomic classes so hundreds
 of request threads can update statistics safely without one application-wide lock.
 
-## Requirements
+## 💻 Techonology Requirements
 
 - Java 21 or newer
 - A valid OpenAI API key in the `OPENAI_API_KEY` environment variable
 - A current browser with microphone support (Chrome is recommended)
 
-The API key is read only by the Java server. It is never placed in the HTML or JavaScript, returned
-in a response, or written to application logs.
+## 🛠️ Running the project
 
-## Run locally with the real provider
-
-From the `Assignment1` directory:
+From `Assignment1` dirctory:
 
 ```bash
 read -s "OPENAI_API_KEY?Paste your OpenAI API key (hidden): "
@@ -52,21 +47,19 @@ export OPENAI_API_KEY
 ```
 
 The `read -s` prompt hides the key and keeps it out of the command itself. Open
-<http://localhost:8080> and allow microphone access when prompted. Do not commit a real key to the
-repository or paste it into a browser file. After stopping the server with `Control+C`, run
-`unset OPENAI_API_KEY` to remove the key from the current terminal session.
+<http://localhost:8080> and allow microphone access when prompted. DO NOT commit a real key to the
+repository or paste it into a browser file.
 
-## Run locally without an API key
+## Runing th eporject LOCALLY without API key
 
-The `local-stub` Spring profile exercises the complete browser upload and REST flow without
+The `local-stub` Spring profile shows complete browser upload and REST flow without
 contacting OpenAI:
 
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local-stub
 ```
 
-The returned message reports how many audio bytes reached the backend. It is deliberately labelled
-as a local demonstration and is not a real transcription. TITAN uses the default profile and
+The returned message reports how many audio bytes reached the backend. TITAN uses the default profile and
 therefore selects `OpenAiTranscriptionService`.
 
 ## Build the executable JAR
@@ -94,18 +87,11 @@ non-shutdown work receives `422` so in-flight work can finish within TITAN's fiv
 All controller errors use the shared `timestamp`, `status`, `error`, `message`, and `path` shape.
 
 ## Frontend behaviour
-
-- Exact accessible **Start audio recording** and **Stop recording** controls
-- Visible and screen-reader-announced ready, recording, uploading, success, and failure states
-- Automatic upload when recording stops and automatic reset for another recording
 - Automatic stop at 59 seconds to remain under the one-minute limit
 - `async`/`await`, request timeout handling, microphone permission errors, and provider errors
 - Preferred mono Opus recording at 32 kbit/s to reduce network load and transcription latency
 - Microphone tracks released immediately after recording to protect privacy and device resources
 
-Browser audio support differs by platform. The client prefers WebM/Opus, then WebM, Ogg/Opus,
-and MP4. Chrome is the safest demonstration browser. The server validates type, emptiness, and the
-25 MB provider limit before any cloud request.
 
 ## Regression-testing approach
 
@@ -125,26 +111,9 @@ The suite runs without a real API key. Every test has a specific failure it is d
 The two concurrency tests are intentionally different: one attacks shared mutable state, while the
 other exercises the real embedded HTTP server and controller path.
 
-## Logging and security
-
-Each `/api/` response contains an `X-Request-Id`. The server logs only the request method, path,
-status, request identifier, and duration. The regression suite verifies the correlation header and
-completion log. Request bodies, audio, transcribed text, API keys, authorization headers, and cloud
-response bodies are deliberately excluded. Expected validation failures are returned safely;
-unexpected technical exceptions remain server-side.
-
-## Source-code conventions
-
-The project follows the supplied Java conventions: lower-case package names, `UpperCamelCase`
-classes, `lowerCamelCase` variables and methods, four-space indentation, and Javadoc for public
-types and important public operations. Comments explain design reasons and course concepts instead
-of translating every Java statement into English.
 
 ## Development assistance and references
 
-OpenAI Codex was used for Java/Spring research, design review, implementation suggestions,
-documentation, and test generation. All submitted code must be reviewed and understood by the
-student, who remains responsible for explaining its behaviour. The implementation also refers to
-the supplied course materials, assignment API YAML, Java naming-convention document, Spring Boot
-documentation, and the official OpenAI transcription API documentation.
+OpenAI Codex was used as assistance for Java/Spring research, design review, implementation suggestions,
+and helping in test generation. The theory references the course materials, corss-checked with the assignment API YAML, Java naming-convention document.
 

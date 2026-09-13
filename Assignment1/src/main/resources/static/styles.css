@@ -1,3 +1,7 @@
+/*THIS IS MADE WITH THE HELP OF CHATGPT*/
+
+/* -------------------- SITE-WIDE VARIABLES AND RESET -------------------- */
+/* Defines reusable colours, fonts, and sizing behaviour for the whole page. */
 :root {
     /* CSS custom properties keep the colour palette consistent and easy to change. */
     color-scheme: light;
@@ -18,6 +22,8 @@
     box-sizing: border-box;
 }
 
+/* -------------------- BLUE AND PURPLE PAGE BACKGROUND -------------------- */
+/* The two radial gradients create the blue and purple glows behind the glass card. */
 body {
     min-height: 100vh;
     margin: 0;
@@ -34,6 +40,8 @@ textarea {
     font: inherit;
 }
 
+/* -------------------- CENTRED PAGE LAYOUT -------------------- */
+/* CSS Grid keeps the complete recorder card in the centre of the browser window. */
 .app-shell {
     /* CSS Grid centres the card horizontally and vertically in the viewport. */
     display: grid;
@@ -42,6 +50,8 @@ textarea {
     padding: 2rem 1rem;
 }
 
+/* -------------------- GLASS RECORDER CARD -------------------- */
+/* A transparent surface, blur, and shadow create the glassy appearance. */
 .recorder-card {
     /* min() and clamp() make the layout adapt without many fixed screen sizes. */
     width: min(100%, 46rem);
@@ -53,6 +63,8 @@ textarea {
     backdrop-filter: blur(18px);
 }
 
+/* ----------- PAGE HEADINGS AND INTRODUCTION ------------ */
+/* Styles the course label, main title, and introductory instructions. */
 .eyebrow {
     margin: 0 0 0.65rem;
     color: var(--primary);
@@ -68,6 +80,13 @@ p {
     margin-top: 0;
 }
 
+/* Keep the introductory course name, title, and instructions centred. */
+.eyebrow,
+#page-title,
+.introduction {
+    text-align: center;
+}
+
 h1 {
     margin-bottom: 1rem;
     font-size: clamp(2rem, 7vw, 3.6rem);
@@ -77,12 +96,14 @@ h1 {
 
 .introduction {
     max-width: 38rem;
-    margin-bottom: 2rem;
+    margin: 0 auto 2rem;
     color: var(--muted);
     font-size: 1.05rem;
     line-height: 1.7;
 }
 
+/* -------------------- RECORDING STATUS AND TIMER -------------------- */
+/* Shows whether the recorder is ready, recording, or uploading audio. */
 .status-panel {
     display: flex;
     align-items: center;
@@ -104,7 +125,7 @@ h1 {
 }
 
 body[data-state="recording"] .status-indicator {
-    /* JavaScript changes data-state; CSS then supplies the matching visual feedback. */
+    /* JS changes data-state. CSS then supplies the matching visual feedback. */
     background: var(--danger);
     box-shadow: 0 0 0 0.3rem rgba(200, 62, 77, 0.14);
     animation: pulse 1.4s infinite;
@@ -121,6 +142,8 @@ body[data-state="uploading"] .status-indicator {
     font-variant-numeric: tabular-nums;
 }
 
+/* -------------------- RECORDING BUTTONS -------------------- */
+/* Arranges and styles the Start and Stop recording controls. */
 .controls {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -169,6 +192,8 @@ body[data-state="uploading"] .status-indicator {
     opacity: 0.45;
 }
 
+/* -------------------- ERROR MESSAGE -------------------- */
+/* Makes microphone, browser, and server errors clearly visible to the user. */
 .error-message {
     padding: 0.8rem 1rem;
     border-left: 0.25rem solid var(--danger);
@@ -177,6 +202,8 @@ body[data-state="uploading"] .status-indicator {
     background: #fff0f2;
 }
 
+/* ------------- TRANSCRIPTION RESULT ------------- */
+/* styles the heading and text area where the completed transcription appears. */
 .result-panel {
     margin-top: 2rem;
     padding-top: 1.5rem;
@@ -209,18 +236,26 @@ body[data-state="uploading"] .status-indicator {
     color: var(--muted);
     background: white;
     line-height: 1.65;
+    /* The initial placeholder is centred before a result exists. */
+    text-align: center;
     white-space: pre-wrap;
 }
 
 .transcription.has-result {
+    /* JavaScript adds has-result after transcription, returning normal text to the left. */
     color: var(--ink);
+    text-align: left;
 }
 
+/* -------------------- RECORDING ANIMATION -------------------- */
+/* Pulses the status dot while recording or waiting for transcription. */
 @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.42; }
 }
 
+/* -------------------- RESPONSIVE MOBILE LAYOUT -------------------- */
+/* Stacks controls on narrow screens so the interface remains easy to use. */
 @media (max-width: 34rem) {
     /* On narrow screens, stack controls so each button remains easy to tap. */
     .controls {
@@ -234,6 +269,8 @@ body[data-state="uploading"] .status-indicator {
     }
 }
 
+/* -------------------- REDUCED-MOTION ACCESSIBILITY -------------------- */
+/* Disables most animation when the user requests reduced motion in their OS. */
 @media (prefers-reduced-motion: reduce) {
     /* Respect the operating-system accessibility preference for reduced movement. */
     *,

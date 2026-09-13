@@ -1,6 +1,8 @@
 "use strict";
 
-// querySelector connects JavaScript variables to elements identified in index.html
+// -------------------- PAGE ELEMENT REFERENCES --------------------
+// references to HTML elements that JS needs to update
+// querySelector connects JS variables to elements identified in index.html
 const startButton = document.querySelector("#start-button");
 const stopButton = document.querySelector("#stop-button");
 const statusText = document.querySelector("#status-text");
@@ -9,10 +11,14 @@ const errorMessage = document.querySelector("#error-message");
 const transcription = document.querySelector("#transcription");
 const resultState = document.querySelector("#result-state");
 
+// -------------------- RECORDING CONFIGURATION --------------------
+// time, timeout, and audio-quality limits 
 const MAX_RECORDING_SECONDS = 59;
 const UPLOAD_TIMEOUT_MILLISECONDS = 15_000;
 const AUDIO_BITS_PER_SECOND = 32_000;
 
+// -------------------- CHANGING RECORDING STATE --------------------
+// These variables rmb the active recorder, audio, and timer between functions.
 // hold changing state across the START, STOP and UPLOAD event handlers
 let mediaRecorder;
 let microphoneStream;
@@ -20,12 +26,14 @@ let audioChunks = [];
 let timerId;
 let recordingStartedAt;
 
-// Event listeners call these functions only when the user activates the corresponding button.
+// -------------------- RECORDING BUTTON EVENTS --------------------
 startButton.addEventListener("click", startRecording);
 stopButton.addEventListener("click", stopRecording);
 
+// -------------------- START RECORDING --------------------
+// requests microphone access and begins collecting compressed audio chunks
 /**
- * Requests microphone permission only after the user clicks. Browsers block microphone access
+ * requests microphone permission only after the user clicks. Browsers block microphone access
  * when it is attempted automatically during page loading.
  */
 async function startRecording() {
@@ -62,7 +70,7 @@ async function startRecording() {
             }
         });
 
-        // final dataavailable event happens immediately before stop
+        // final data available event happens immediately before stop
         mediaRecorder.addEventListener("stop", uploadRecording, { once: true });
         mediaRecorder.start(250);
         beginTimer();
@@ -74,6 +82,8 @@ async function startRecording() {
     }
 }
 
+// -------------------- STOP RECORDING --------------------
+// STOPS the recorder, releases the microphone, changes the page to uploading
 /**  Stops the recorder; its stop event then starts the automatic upload */
 function stopRecording() {
     // Guard clauses safely leave the function when there is no active recorder to stop.
@@ -88,6 +98,8 @@ function stopRecording() {
     setPageState("uploading", "Transcribing your recording…");
 }
 
+// ----------- AUDIO UPLOAD AND TRANSCRIPTION DISPLAY --------------
+// Sends the finished audio to Java and displays either the returned text or an error
 /** Uploads the 'Blob' directly; the Java server adds the multipart wrapper required by OpenAI. */
 async function uploadRecording() {
     const contentType = mediaRecorder.mimeType || audioChunks[0]?.type || "audio/webm";
@@ -99,7 +111,7 @@ async function uploadRecording() {
         UPLOAD_TIMEOUT_MILLISECONDS);
 
     try {
-        // fetch sends the recorded bytes to our Java controller, not directly to OpenAI.
+        // fetch sends the recorded bytes to our Java controller, not directly to OpenAI
         const response = await fetch("/api/v1/record/upload", {
             method: "POST",
             headers: { "Content-Type": recording.type },
@@ -107,7 +119,7 @@ async function uploadRecording() {
             signal: abortController.signal
         });
 
-        // A resolved fetch Promise can still contain an HTTP error, so response.ok is checked.
+        // A resolved fetch Promise can still contain an HTTP error, so response.ok is checked
         const responseBody = await parseJsonSafely(response);
         if (!response.ok) {
             throw new Error(
@@ -129,13 +141,15 @@ async function uploadRecording() {
         resultState.textContent = "Transcription failed";
         setPageState("ready", "Ready to try again");
     } finally {
-        // finally performs cleanup whether the upload succeeded, failed or timed out.
+        // finally performs cleanup whether the upload succeeded, failed or timed out
         window.clearTimeout(timeoutId);
         audioChunks = [];
         mediaRecorder = undefined;
     }
 }
 
+// -------------------- AUDIO FORMAT SELECTION --------------------
+// prefers small Opus recordings but falls back to formats supported by the browser
 /** Selects only formats accepted by the assignment's transcription provider. */
 function chooseSupportedMimeType() {
     const preferredTypes = [
@@ -148,6 +162,8 @@ function chooseSupportedMimeType() {
     return preferredTypes.find((type) => MediaRecorder.isTypeSupported(type)) || "";
 }
 
+// -------------------- RECORDING TIMER --------------------
+// displays elapsed time and automatically stops before the one-minute limit
 function beginTimer() {
     recordingStartedAt = Date.now();
     recordingTime.hidden = false;
@@ -159,7 +175,7 @@ function updateTimer() {
     const seconds = Math.floor((Date.now() - recordingStartedAt) / 1000);
     recordingTime.textContent = `0:${String(seconds).padStart(2, "0")}`;
 
-    // A small margin keeps the recording below the stated one-minute limit.
+    // A small margin keeps the recording below the stated one-minute limit
     if (seconds >= MAX_RECORDING_SECONDS) {
         stopRecording();
     }
@@ -170,12 +186,16 @@ function stopTimer() {
     recordingTime.hidden = true;
 }
 
+// -------------------- MICROPHONE CLEANUP --------------------
+// Releases the physical microphone as soon as it is no longer required
 function releaseMicrophone() {
     // Stopping every track turns off the physical microphone indicator and releases the device.
     microphoneStream?.getTracks().forEach((track) => track.stop());
     microphoneStream = undefined;
 }
 
+// ------------ PAGE STATE AND BUTTON AVAILABILITY -------------
+// Keeps the status message and enabled Start/Stop button in sync.
 function setPageState(state, message) {
     // One state value controls both the visible CSS design and which actions are permitted.
     document.body.dataset.state = state;
@@ -184,6 +204,8 @@ function setPageState(state, message) {
     stopButton.disabled = state !== "recording";
 }
 
+// ------------ ERROR DISPLAY -------------
+// shows browser errors and CLEAR SOLD ERRORS before another attempt
 function showError(message) {
     errorMessage.textContent = message;
     errorMessage.hidden = false;
@@ -207,13 +229,17 @@ function microphoneErrorMessage(error) {
     return "The microphone could not be started. Please try again.";
 }
 
+// ------------ SAFE SERVER RESPONSE READING -------------
+// Prevents a non-JSON proxy/server response from causing a second confusing error
 async function parseJsonSafely(response) {
     try {
         return await response.json();
     } catch {
-        // Not every server/proxy error includes JSON; an empty object lets the caller fall back.
+        // Not every server/proxy error includes JSON.  empty object lets the caller fall back
         return {};
     }
 }
 
+// -------------------- INITIAL PAGE STATE --------------------
+// The page begins ready for its first recording.
 setPageState("ready", "Ready to record");

@@ -1,34 +1,26 @@
-<!-- doctype tells the browser to interpret this document using modern HTML5 rules -->
+
 <!doctype html>
-<!-- lang identifies the page language for browsers, search engines and screen readers -->
 <html lang="en">
 <head>
-    <!-- head contains page settings and linked files that are not displayed as page content -->
-    <!-- charset="utf-8" supports common letters, symbols and characters -->
     <meta charset="utf-8">
     <!-- viewport makes the layout use the real device width on phones and tablets -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- description summarises the page for search engines and link previews -->
     <meta name="description" content="Record a short message and convert it to text.">
-    <!-- title is shown in the browser tab -->
     <title>Speech to text</title>
-    <!-- rel="stylesheet" tells the browser that href points to the page's CSS file -->
+    <!-- CSS file -->
     <link rel="stylesheet" href="/styles.css">
-    <!-- src points to the JavaScript file; defer waits until the HTML has been parsed to run it -->
+    <!-- JS file -->
     <script src="/app.js" defer></script>
 </head>
 <body>
-    <!-- main marks the page's primary content; class connects elements to reusable CSS rules -->
     <main class="app-shell">
         <!-- aria-labelledby gives this section the accessible name stored in page-title -->
         <section class="recorder-card" aria-labelledby="page-title">
             <!-- &amp; is the HTML character entity used to display an ampersand -->
             <p class="eyebrow">Cloud &amp; Concurrent Programming</p>
-            <!-- An id is unique on the page and can be selected by JavaScript or accessibility links -->
-            <h1 id="page-title">Turn your voice into text</h1>
+            <h1 id="page-title">Audio Transcription</h1>
             <p class="introduction">
-                Record a message of up to one minute. Your recording is sent securely to the
-                Java server and transcribed automatically when you stop.
+                Record a message of up to one minute to be transcribed.
             </p>
 
             <!--
@@ -43,10 +35,7 @@
                 <span id="recording-time" class="recording-time" hidden>0:00</span>
             </div>
 
-            <!--
-                type="button" prevents form submission; disabled blocks an unavailable action
-                JavaScript changes the disabled states when recording starts and stops
-            -->
+
             <div class="controls">
                 <button id="start-button" class="button button-primary" type="button">
                     Start audio recording
@@ -57,8 +46,8 @@
             </div>
 
             <!--
-                role="alert" announces errors; tabindex="-1" lets JavaScript move focus here
-                hidden keeps the empty error area out of the page until an error occurs
+                role="alert" announces errors; tabindex="-1" lets JS move focus here
+                hidden keeps empty error area out of page until an error occurs
             -->
             <p id="error-message" class="error-message" role="alert" tabindex="-1" hidden></p>
 
@@ -69,7 +58,7 @@
                     <span id="result-state">Waiting for a recording</span>
                 </div>
                 <p id="transcription" class="transcription" tabindex="-1">
-                    Your transcribed words will appear here.
+                    Transcription will appear here.
                 </p>
             </section>
         </section>

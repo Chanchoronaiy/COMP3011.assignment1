@@ -8,19 +8,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-/** Verifies that internal measurements do not leak into the prescribed statistics response. */
+/** Verifies that internal measurements do not leak into  prescribed statistics response. */
 class StatisticsControllerTests {
 
-    // @Test marks this method as a test that JUnit should run automatically.
+    // @Test marks this method as a test that JUnit should run autom
     @Test
-    // MockMvc methods can report checked exceptions, so the test passes them to JUnit.
+    // MockMvc methods can report checked exceptions, so the test passes them to JUnit
     void responseContainsExactlyTheTwoTokenCounters() throws Exception {
-        // Arrange: create known statistics and the controller being tested.
+        // Arrange: create known statistics and the controller being tested
         RequestStatistics statistics = new RequestStatistics();
         statistics.recordStarted(500);
         statistics.recordSucceeded(14, 6, 1_000_000);
 
-        // MockMvc exercises the HTTP controller without starting a real web server.
+        // MockMvc exercises the HTTP controller without starting a real web server
         MockMvc mockMvc = MockMvcBuilders
                 .standaloneSetup(new StatisticsController(statistics))
                 .build();

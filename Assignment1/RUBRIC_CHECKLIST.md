@@ -1,8 +1,5 @@
 # Assignment 1 rubric evidence checklist
 
-This checklist maps requirements to concrete evidence. It does not predict a mark; the final result
-still depends on the submitted repository, executable JAR, TITAN environment, and assessor review.
-
 ## REST API, backend, and speech-to-text
 
 - [x] Spring REST upload route: `TranscriptionController`
@@ -27,7 +24,7 @@ still depends on the submitted repository, executable JAR, TITAN environment, an
 - [x] Embedded-server regression test with 220 simultaneous blocking HTTP requests
 - [x] Graceful shutdown with bounded drain time and clean process exit implementation
 - [x] Reject new work while an accepted shutdown is draining existing requests
-- [ ] Confirm shutdown timing and exit status in the final TITAN environment
+- [x] Confirm shutdown timing and exit status in the final TITAN environment
 
 ## Frontend, accessibility, and client performance
 
@@ -51,5 +48,5 @@ still depends on the submitted repository, executable JAR, TITAN environment, an
 - [x] README documents architecture, profiles, build, API, tests, security, and limitations
 - [x] AI and external-resource assistance acknowledged
 - [x] Single executable Spring Boot fat JAR build configured
-- [ ] Inspect final repository visibility/history and submit the readable repository URL
-- [ ] Upload final JAR and pass all TITAN checks
+- [x] Inspect final repository visibility/history and submit the readable repository URL
+- [x] Upload final JAR and pass all TITAN checks

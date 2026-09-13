@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 /** Tests the REST controller with a stub instead of contacting the paid cloud API. */
-// @ExtendWith adds JUnit functionality; this extension captures log output for assertions.
+// @ExtendWith adds JUnit functionality; this extension captures log output for assertions
 @ExtendWith(OutputCaptureExtension.class)
 class TranscriptionControllerTests {
 
@@ -27,7 +27,7 @@ class TranscriptionControllerTests {
     private StubTranscriptionService stubService;
     private MockMvc mockMvc;
 
-    // @BeforeEach runs before every @Test so one test cannot affect another test's state.
+    // runs before every @Test so one test cannot affect another test's state
     @BeforeEach
     void setUp() {
         statistics = new RequestStatistics();
@@ -35,7 +35,7 @@ class TranscriptionControllerTests {
         TranscriptionController controller =
                 new TranscriptionController(stubService, statistics);
 
-        // Build an in-memory HTTP layer with the real error handler and logging filter.
+        // Build an in-memory HTTP layer with the real error handler and logging filter
         mockMvc = MockMvcBuilders
                 .standaloneSetup(controller)
                 .setControllerAdvice(new ApiExceptionHandler())
@@ -45,7 +45,7 @@ class TranscriptionControllerTests {
 
     @Test
     void validRecordingReturnsTheStubbedTranscription(CapturedOutput output) throws Exception {
-        // contentType describes the audio format; content supplies the pretend audio bytes.
+        // contentType describes the audio format; content supplies the pretend audio bytes
         mockMvc.perform(post("/api/v1/record/upload")
                         .contentType("audio/webm;codecs=opus")
                         .content(new byte[] {1, 2, 3, 4}))
@@ -56,7 +56,7 @@ class TranscriptionControllerTests {
         assertThat(output).contains(
                 "method=POST path=/api/v1/record/upload status=200 durationMs=");
 
-        // The test also checks that usage information reached the thread-safe counters.
+        // test also checks that usage information reached the thread-safe counters
         var snapshot = statistics.snapshot();
         assertThat(snapshot.successfulRequests()).isEqualTo(1);
         assertThat(snapshot.totalInputTokens()).isEqualTo(12);
@@ -82,7 +82,7 @@ class TranscriptionControllerTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("This audio format is not supported."));
 
-        // Rejection should happen during validation, before the provider is contacted.
+        // Rejection should happen during validation, before the provider is contacted
         assertThat(stubService.callCount).isZero();
     }
 
@@ -104,7 +104,7 @@ class TranscriptionControllerTests {
     }
 
     /** A deterministic test double makes the controller tests fast and repeatable. */
-    // static means the test double does not need an outer test object; final prevents extension.
+    // static = test double does not need an outer test object. final prevents extension.
     private static final class StubTranscriptionService implements TranscriptionService {
 
         private int callCount;
@@ -114,8 +114,7 @@ class TranscriptionControllerTests {
         public TranscriptionResult transcribe(AudioRecording recording) {
             callCount++;
             if (fail) {
-                // This controlled exception exercises the controller's failure path.
-                throw new TranscriptionServiceException("provider details", null);
+                throw new TranscriptionServiceException("provider details", null); // exception shows the controller's failure path.
             }
             return new TranscriptionResult("hello from the stub", 12, 4);
         }

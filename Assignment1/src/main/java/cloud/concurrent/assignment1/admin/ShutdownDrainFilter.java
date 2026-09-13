@@ -18,21 +18,22 @@ import tools.jackson.databind.ObjectMapper;
 /** Refuses new work while Spring is draining requests that were already in flight. */
 // @Component registers the filter with Spring automatically.
 @Component
-// A low order number runs early. HIGHEST_PRECEDENCE + 1 leaves room for Spring's
-// own highest-priority filter while still checking shutdown before normal work.
+
+// A low order number runs early HIGHEST_PRECEDENCE + 1 leaves room for Spring's
+// own highest-priority filter while still checking shutdown before normal work
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
-// extends means this class inherits OncePerRequestFilter's behaviour. Spring then
-// calls doFilterInternal exactly once for each HTTP request.
+// extends = this class inherits OncePerRequestFilter's behaviour. 
+// Spring then calls doFilterInternal exactly once for each HTTP request.
 public class ShutdownDrainFilter extends OncePerRequestFilter {
 
-    // static final creates one class-wide constant whose value cannot be reassigned.
+    // static final creates one class-wide constant whose value cannot be reassigned
     private static final String SHUTDOWN_PATH = "/api/v1/admin/shutdown";
 
     private final ShutdownCoordinator shutdownCoordinator;
-    // ObjectMapper converts Java objects, such as ErrorResponse, into JSON.
+    // ObjectMapper converts Java objects, ex. ErrorResponse, into JSON.
     private final ObjectMapper objectMapper;
 
-    // Spring constructor injection supplies both required collaborators.
+    // Spring constructor injection supplies both required collaborators
     public ShutdownDrainFilter(
             ShutdownCoordinator shutdownCoordinator,
             ObjectMapper objectMapper) {
@@ -45,22 +46,18 @@ public class ShutdownDrainFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
-        // The throws declaration allows servlet or input/output failures to be
-        // passed to the web server instead of being hidden inside this method.
-        // Filters run before controllers. Existing work can finish, but once shutdown begins,
-        // new requests are stopped here before they start additional work.
-        // || means OR: continue when shutdown has not started, or when this request
-        // is the shutdown request itself. String.equals compares the path's contents.
-        if (!shutdownCoordinator.isShutdownRequested()
-                || SHUTDOWN_PATH.equals(request.getRequestURI())) {
+        // Filters run before controllers. Existing work can finish, but once shutdown begins, new requests are stopped here before they start additional work
+        
+        // continue when shutdown has not started, or when this request is the shutdown request itself. 
+        // String.equals compares the path's contents.
+        if (!shutdownCoordinator.isShutdownRequested() || SHUTDOWN_PATH.equals(request.getRequestURI())) {
             // Calling the next filter continues the normal request-processing chain.
             filterChain.doFilter(request, response);
-            // return ends this method so the rejection response below is not also written.
             return;
         }
 
-        // Write the required JSON error directly because the request never reaches a controller.
-        // HTTP 422 tells the caller that this normally valid request cannot be processed now.
+        // Write the required JSON error directly bc request never reaches a controller.
+        // HTTP 422 tells caller this normally valid request cannot be processed now.
         HttpStatus status = HttpStatus.valueOf(422);
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

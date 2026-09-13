@@ -11,17 +11,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-/** Regression tests for the exact administration API contract supplied with the assignment. */
+/** Regression tests */
 class AdministrationControllerTests {
 
     @Test
     void uptimeContainsBothUtcTimestampsAndElapsedSeconds() throws Exception {
-        // standaloneSetup tests this controller without launching a complete server.
+        // standaloneSetup tests this controller without launching a complete server
         MockMvc mockMvc = MockMvcBuilders
                 .standaloneSetup(new UptimeController())
                 .build();
 
-        // The chained andExpect calls check the HTTP status and exact JSON contract.
+        // chained andExpect calls check the HTTP status and exact JSON contract
         mockMvc.perform(get("/api/v1/admin/uptime"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.utcServerStart").isString())
@@ -32,7 +32,7 @@ class AdministrationControllerTests {
 
     @Test
     void firstShutdownIsAcceptedAndSecondShutdownReturnsConflict() throws Exception {
-        // Use a harmless test double so this test never shuts down the real test process.
+        // Use a harmless test double so this test never shuts down the real test process
         StubShutdownCoordinator coordinator = new StubShutdownCoordinator();
         MockMvc mockMvc = MockMvcBuilders
                 .standaloneSetup(new ShutdownController(coordinator))
@@ -40,13 +40,13 @@ class AdministrationControllerTests {
                 .setControllerAdvice(new ApiExceptionHandler())
                 .build();
 
-        // The first request must be accepted because shutdown has not started yet.
+        // first request must be accepted because shutdown has not started yet
         mockMvc.perform(post("/api/v1/admin/shutdown"))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.message").value("Graceful shutdown requested."))
                 .andExpect(jsonPath("$.length()").value(1));
 
-        // Repeating the request must return Conflict instead of starting shutdown twice.
+        // Repeating the request must return Conflict instead of starting shutdown twice
         mockMvc.perform(post("/api/v1/admin/shutdown"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
@@ -63,7 +63,7 @@ class AdministrationControllerTests {
 
         @Override
         public boolean requestShutdown() {
-            // The boolean stores state between the first and second simulated requests.
+            // boolean stores state between the first and second simulated requests
             if (shutdownRequested) {
                 return false;
             }

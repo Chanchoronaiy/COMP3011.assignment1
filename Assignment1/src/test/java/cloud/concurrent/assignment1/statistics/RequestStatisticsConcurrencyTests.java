@@ -15,17 +15,17 @@ class RequestStatisticsConcurrencyTests {
     @Test
     void countersRemainCorrectWhenManyThreadsFinishTogether() throws InterruptedException {
         RequestStatistics statistics = new RequestStatistics();
-        // This latch reaches zero only after all 240 threads have been created and are ready.
+        // latch reaches zero only after all 240 threads have been created and are ready
         CountDownLatch ready = new CountDownLatch(THREAD_COUNT);
-        // This second latch acts like a starting gate so the threads overlap in time.
+        // second latch acts like a starting gate so the threads overlap in time.
         CountDownLatch startTogether = new CountDownLatch(1);
         List<Thread> threads = new ArrayList<>();
 
         for (int index = 0; index < THREAD_COUNT; index++) {
-            // A virtual thread is lightweight, so Java can run many blocking tasks efficiently.
+            // virtual thread is lightweight, so Java can run many blocking tasks efficiently
             Thread thread = Thread.ofVirtual().start(() -> {
                 ready.countDown();
-                // Each thread waits here until the main test opens the starting gate.
+                // Each thread waits here until main test opens the starting gate
                 await(startTogether);
                 statistics.recordStarted(100);
                 statistics.recordSucceeded(2, 1, 1_000_000);
@@ -33,16 +33,16 @@ class RequestStatisticsConcurrencyTests {
             threads.add(thread);
         }
 
-        // await() pauses this test until every worker is ready; countDown() opens the gate.
+        // await() pauses this test until every worker is ready; countDown() opens the gate
         ready.await();
         startTogether.countDown();
 
         for (Thread thread : threads) {
-            // join() ensures every update is finished before the final totals are inspected.
+            // join() ensures every update is finished before the final totals are inspected
             thread.join();
         }
 
-        // If the counters were not thread-safe, one or more of these totals could be too small.
+        // If counters were not thread-safe, one or more of these totals could be too small.
         StatisticsSnapshot snapshot = statistics.snapshot();
         assertThat(snapshot.totalRequests()).isEqualTo(THREAD_COUNT);
         assertThat(snapshot.successfulRequests()).isEqualTo(THREAD_COUNT);
@@ -57,7 +57,7 @@ class RequestStatisticsConcurrencyTests {
         try {
             latch.await();
         } catch (InterruptedException exception) {
-            // Restore the flag so callers can observe that this virtual thread was interrupted.
+            // restore the flag so callers can observe that this virtual thread was interrupted
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Concurrency test was interrupted", exception);
         }

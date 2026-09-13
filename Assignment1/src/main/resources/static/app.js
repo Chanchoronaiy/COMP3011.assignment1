@@ -1,3 +1,5 @@
+//THE RECORDING DESIGN IS MADE WITH THE HELP OF CHATGPT
+
 "use strict";
 
 // -------------------- PAGE ELEMENT REFERENCES --------------------

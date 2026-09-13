@@ -18,12 +18,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
-/** Verifies the cloud API boundary without making an external network request. */
+/** Verifies the cloud API boundary without making an external network request */
 class OpenAiTranscriptionServiceTests {
 
     @Test
     void missingApiKeyFailsBeforeAnyNetworkRequest() {
-        // Arrange with an empty API key to represent a server that was not configured.
+        // Arrange with an empty API key to represent a server that was not configured
         OpenAiProperties properties = new OpenAiProperties(
                 "",
                 "gpt-4o-mini-transcribe",
@@ -43,11 +43,11 @@ class OpenAiTranscriptionServiceTests {
 
     @Test
     void mapsOpenAiTextAndTokenUsage() {
-        // The builder creates the same RestClient shape used by the real application.
+        // builder creates the same RestClient shape used by the real application
         RestClient.Builder builder = RestClient.builder()
                 .baseUrl("https://api.openai.test")
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer test-key");
-        // This mock server intercepts the request in memory, so no paid API call is made.
+        //  mock server intercepts the request in memory, so no paid API call is made.
         MockRestServiceServer mockServer = MockRestServiceServer
                 .bindTo(builder)
                 .build();
@@ -55,10 +55,9 @@ class OpenAiTranscriptionServiceTests {
                 "test-key",
                 "gpt-4o-mini-transcribe",
                 "https://api.openai.test");
-        OpenAiTranscriptionService service =
-                new OpenAiTranscriptionService(builder.build(), properties);
+        OpenAiTranscriptionService service = new OpenAiTranscriptionService(builder.build(), properties);
 
-        // Describe the exact outgoing request and the fake JSON response it should receive.
+        // Describe the exact outgoing request and the fake JSON response it should receive
         mockServer.expect(once(), requestTo("https://api.openai.test/v1/audio/transcriptions"))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer test-key"))
@@ -78,17 +77,17 @@ class OpenAiTranscriptionServiceTests {
                         """,
                         MediaType.APPLICATION_JSON));
 
-        // Act: call the service with a small pretend WebM recording.
+        // Act: call the service with a small pretend WebM recording
         TranscriptionResult result = service.transcribe(new AudioRecording(
                 new byte[] {1, 2, 3},
                 "audio/webm",
                 "recording.webm"));
 
-        // Assert: the service converted the JSON into the application's result model.
+        // Assert: the service converted the JSON into the application's result model
         assertThat(result.text()).isEqualTo("hello from OpenAI");
         assertThat(result.inputTokens()).isEqualTo(14);
         assertThat(result.outputTokens()).isEqualTo(5);
-        // verify() confirms that the expected HTTP request occurred exactly once.
+        // verify() confirms that the expected HTTP request occurred exactly once
         mockServer.verify();
     }
 }

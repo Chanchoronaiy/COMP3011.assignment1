@@ -33,7 +33,7 @@ class ConcurrentHttpRequestTests {
 
     private static final int CONCURRENT_REQUESTS = 220;
 
-    // Spring writes the chosen random port into this field after the test server starts.
+    // Spring writes the chosen random port into this field after the test server starts
     @LocalServerPort
     private int port;
 
@@ -46,30 +46,28 @@ class ConcurrentHttpRequestTests {
                 .connectTimeout(Duration.ofSeconds(5))
                 .version(HttpClient.Version.HTTP_1_1)
                 .build();
-        // Each future represents an HTTP response that will arrive asynchronously later.
+        // each future represents an HTTP response that will arrive asynchronously later
         List<CompletableFuture<HttpResponse<String>>> responses = new ArrayList<>();
 
         for (int index = 0; index < CONCURRENT_REQUESTS; index++) {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(
-                            "http://127.0.0.1:" + port + "/api/v1/record/upload"))
+                    .uri(URI.create( "http://127.0.0.1:" + port + "/api/v1/record/upload"))
                     .header("Content-Type", "audio/webm")
                     .POST(HttpRequest.BodyPublishers.ofByteArray(new byte[] {1, 2, 3}))
                     .build();
-            // sendAsync returns immediately, allowing all 220 requests to overlap.
+            // sendAsync returns immediately, allowing all 220 requests to overlap
             responses.add(client.sendAsync(request, HttpResponse.BodyHandlers.ofString()));
         }
 
         boolean everyRequestReachedTheBlockingService = false;
         try {
-            everyRequestReachedTheBlockingService =
-                    stubService.awaitEveryRequest(Duration.ofSeconds(10));
+            everyRequestReachedTheBlockingService = stubService.awaitEveryRequest(Duration.ofSeconds(10));
         } finally {
-            // Always release handlers, even when the assertion is about to fail.
+            // Always release handlers, even when the assertion is about to fail
             stubService.releaseRequests();
         }
 
-        // allOf creates one future that completes after every response future has completed.
+        // allOf creates one future that completes after every response future has completed
         CompletableFuture
                 .allOf(responses.toArray(CompletableFuture[]::new))
                 .get(10, TimeUnit.SECONDS);
@@ -84,12 +82,11 @@ class ConcurrentHttpRequestTests {
     /** Replaces the paid provider while preserving genuinely blocking server-side work. */
     static final class BlockingStubTranscriptionService implements TranscriptionService {
 
-        // This latch reaches zero only when all 220 handlers are blocked inside the stub.
-        private final CountDownLatch allRequestsArrived =
-                new CountDownLatch(CONCURRENT_REQUESTS);
-        // This one is a gate that releases every blocked handler at the same time.
+        // latch reaches zero only when all 220 handlers are blocked inside the stub
+        private final CountDownLatch allRequestsArrived = new CountDownLatch(CONCURRENT_REQUESTS);
+        // gate that releases every blocked handler at the same time.
         private final CountDownLatch releaseRequests = new CountDownLatch(1);
-        // AtomicInteger keeps increments and reads safe when many threads access them together.
+        // AtomicInteger keeps increments and reads safe when many threads access them together
         private final AtomicInteger activeRequests = new AtomicInteger();
         private final AtomicInteger highestConcurrentRequests = new AtomicInteger();
 
@@ -123,13 +120,12 @@ class ConcurrentHttpRequestTests {
         }
     }
 
-    /** Dependency injection chooses this @Primary stub instead of the real OpenAI service. */
-    // This configuration exists only while the test application context is running.
+    /** Dependency injection chooses this @Primary stub instead of real OpenAI service. */
     @TestConfiguration(proxyBeanMethods = false)
     static class StubConfiguration {
 
         @Bean
-        // @Primary makes this stub win when Spring finds both transcription implementations.
+        // @Primary makes this stub win when Spring finds both transcription implementations
         @Primary
         BlockingStubTranscriptionService blockingStubTranscriptionService() {
             return new BlockingStubTranscriptionService();

@@ -14,22 +14,20 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /** Converts failures into the standard JSON error shape defined by the assignment API. */
-// @RestControllerAdvice applies these handlers across every REST controller.
-// It keeps error-conversion code out of the individual endpoint methods.
+// @RestControllerAdvice applies these handlers across every REST controller-  keeps error-conversion code out of the individual endpoint methods
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
-    // The class-wide logger records server diagnostics without sending them to clients.
+    // class-wide logger records server diagnostics without sending them to clients.
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
-    // @ExceptionHandler routes this exception type to this particular method.
+    // @ExceptionHandler routes this exception type to this particular method
     @ExceptionHandler(InvalidRecordingException.class)
-    // ResponseEntity<ErrorResponse> means the HTTP response body has our standard error shape.
-    ResponseEntity<ErrorResponse> handleInvalidRecording(
+    ResponseEntity<ErrorResponse> handleInvalidRecording( //means HTTP response body has our standard error shape
             InvalidRecordingException exception,
             HttpServletRequest request) {
-        // @ExceptionHandler selects this method when a controller throws the matching type.
-        // HTTP 400 means the client supplied an invalid recording.
+        // @ExceptionHandler selects this method when a controller throws the matching type
+        // HTTP 400 = Client supplied an invalid recording
         return error(HttpStatus.BAD_REQUEST, exception.getMessage(), request);
     }
 
@@ -39,7 +37,7 @@ public class ApiExceptionHandler {
             HttpServletRequest request) {
         // Log only the configuration name, never the secret value.
         LOGGER.error("OPENAI_API_KEY is missing; transcription requests cannot be processed");
-        // HTTP 503 means the server cannot currently provide this configured service.
+        // HTTP 503 = server cannot currently provide this configured service
         return error(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage(), request);
     }
 
@@ -47,14 +45,14 @@ public class ApiExceptionHandler {
     ResponseEntity<ErrorResponse> handleProviderFailure(
             TranscriptionServiceException exception,
             HttpServletRequest request) {
-        // Do not log audio, transcribed text, the API key, or the provider response body.
+        // !! DO NOT log audio, transcribed text, the API key, or the provider response body
         String causeType = exception.getCause() == null
                 ? "unavailable"
                 : exception.getCause().getClass().getSimpleName();
         // {} is an SLF4J placeholder. The logger inserts causeType without manually
         // concatenating strings or printing the provider's potentially sensitive body.
         LOGGER.warn("Cloud transcription request failed: causeType={}", causeType);
-        // HTTP 502 means this server received a failure from an upstream service.
+        // HTTP 502 = server received a failure from an upstream service.
         return error(
                 HttpStatus.BAD_GATEWAY,
                 "Speech transcription is temporarily unavailable.",
@@ -65,11 +63,10 @@ public class ApiExceptionHandler {
     ResponseEntity<ErrorResponse> handleShutdownInProgress(
             ShutdownInProgressException exception,
             HttpServletRequest request) {
-        // HTTP 409 reports that a new shutdown conflicts with one already in progress.
+        // HTTP 409 reports = new shutdown conflicts with one already in progress
         return error(HttpStatus.CONFLICT, exception.getMessage(), request);
     }
 
-    // Exception is broader than the custom types above, so this acts as the final fallback.
     @ExceptionHandler(Exception.class)
     ResponseEntity<ErrorResponse> handleUnexpectedFailure(
             Exception exception,
@@ -86,8 +83,8 @@ public class ApiExceptionHandler {
             HttpStatus status,
             String message,
             HttpServletRequest request) {
-        // Centralising construction keeps every failure response consistent with the YAML API.
-        // ResponseEntity's fluent builder first selects a status and then attaches the body.
+        // Centralising construction keeps every failure response consistent with the YAML API
+        // ResponseEntity's fluent builder first selects a status and then attaches the body
         return ResponseEntity
                 .status(status)
                 .body(new ErrorResponse(
